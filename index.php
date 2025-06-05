@@ -124,8 +124,6 @@
         </form>
     </div>
 
-   
-
     <ul>
         <?php
         // Função para criar nova pasta
@@ -250,30 +248,48 @@
         .remove-btn:hover {
             background-color: #c0392b;
         }
+        .copy-path-btn {
+            background-color: #16a085;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        .copy-path-btn:hover {
+            background-color: #12806a;
+        }
     </style>
 </head>
 <body>
     <h1>Explorador de Diretórios</h1>
-     <!-- Botão de Voltar para o htdocs -->
+    <!-- Botão de Voltar para o htdocs -->
     <div class="back-btn">
         <a href="http://localhost/">← Voltar para o htdocs</a>
     </div>
     <ul>
         <?php
-        // Caminho do diretório atual
         $dir = __DIR__;
         $base_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/";
         if ($handle = opendir($dir)) {
             while (false !== ($entry = readdir($handle))) {
                 if ($entry != "." && $entry != "..") {
                     if (is_dir($dir . DIRECTORY_SEPARATOR . $entry)) {
+                        $absolute_path = realpath($dir . DIRECTORY_SEPARATOR . $entry);
                         echo "<li>
                             <a href='$base_url$entry/' class='file-info'>
                                 <span class='icon folder-icon'>&#128193;</span> $entry
                             </a>
+                            <button type='button' class='copy-path-btn' data-path=\"$absolute_path\">Copiar Caminho</button>
                         </li>";
                     } else {
-                        echo "<li><a href='$base_url$entry' class='file-info'><span class='icon file-icon'>&#128196;</span> $entry</a></li>";
+                        echo "<li>
+                            <a href='$base_url$entry' class='file-info'>
+                                <span class='icon file-icon'>&#128196;</span> $entry
+                            </a>
+                        </li>";
                     }
                 }
             }
@@ -281,11 +297,23 @@
         }
         ?>
     </ul>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.copy-path-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const path = btn.getAttribute('data-path');
+          navigator.clipboard.writeText(path).then(function() {
+            btn.textContent = "Copiado!";
+            setTimeout(() => btn.textContent = "Copiar Caminho", 1200);
+          });
+        });
+      });
+    });
+    </script>
 </body>
 </html>
 EOL;
                 file_put_contents($new_folder_path . '/index.php', $explorer_code);
-                // ---- FIM DO NOVO BLOCO ----
 
                 echo "<p style='color: green; text-align: center;'>Pasta '$new_folder' criada com sucesso!</p>";
             } else {
@@ -339,7 +367,7 @@ EOL;
                             <a href='$base_url$entry/' class='file-info'>
                                 <span class='icon folder-icon'>&#128193;</span> $entry
                             </a>
-                            <form action='' method='POST' style='display:inline;'>
+                            <form action='' method='POST' style='display:inline;' onsubmit=\"return confirm('Tem certeza que deseja remover a pasta \'$entry\'?');\">
                                 <input type='hidden' name='folder_name' value='$entry'>
                                 <button type='submit' name='remove_folder' class='remove-btn'>Remover</button>
                             </form>
@@ -354,6 +382,7 @@ EOL;
             closedir($handle);
         }
         ?>
+
     </ul>
 
 </body>
